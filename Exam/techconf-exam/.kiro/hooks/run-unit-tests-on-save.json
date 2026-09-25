@@ -1,0 +1,16 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "Run Unit Tests on Python Save",
+      "trigger": "PostFileSave",
+      "description": "After saving a Python file inside a service app/ folder, runs that service unit tests",
+      "matcher": "services[\\\\/][^/\\\\]+[\\\\/]app[\\\\/].*\\.py$",
+      "action": {
+        "type": "command",
+        "command": "python -m pytest services/$(echo $KIRO_FILE | grep -oP 'services/\\K[^/]+')/ tests/unit -q --tb=short 2>&1",
+        "timeout": 60
+      }
+    }
+  ]
+}
