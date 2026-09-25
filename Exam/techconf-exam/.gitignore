@@ -1,0 +1,32 @@
+# Data (json/sqlite backends)
+data/
+*.sqlite
+*.sqlite3
+
+# Acceptance-suite runtime logs
+.it-logs/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# OS / editor
+.DS_Store
+*.swp
+.idea/
+.vscode/
+
+# Local service manifest (copy of services.example.yaml)
+# services.yaml is committed by the candidate; kept out of ignore intentionally.

@@ -1,0 +1,341 @@
+openapi: 3.0.3
+info:
+  title: registration-service
+  description: >
+    TechConf registrations of users to events.
+    Validates users against user-service and events against event-service.
+  version: "1.0.0"
+servers:
+  - url: http://localhost:5003
+    description: Development
+paths:
+  /health:
+    get:
+      summary: Health check
+      operationId: health
+      responses:
+        "200":
+          description: Service healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Health"
+
+  /api/v1/registrations:
+    post:
+      summary: Create a registration
+      operationId: createRegistration
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegistrationCreate"
+      responses:
+        "201":
+          description: Created
+          headers:
+            Location:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Registration"
+        "400":
+          $ref: "#/components/responses/MalformedJson"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "503":
+          $ref: "#/components/responses/DependencyUnavailable"
+    get:
+      summary: List registrations
+      operationId: listRegistrations
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/PageSize"
+        - name: user_id
+          in: query
+          required: false
+          schema:
+            type: string
+            format: uuid
+        - name: event_id
+          in: query
+          required: false
+          schema:
+            type: string
+            format: uuid
+        - name: status
+          in: query
+          required: false
+          schema:
+            $ref: "#/components/schemas/RegistrationStatus"
+      responses:
+        "200":
+          description: Paginated list of registrations
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RegistrationPage"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  /api/v1/registrations/stats:
+    get:
+      summary: Registration statistics for an event
+      operationId: registrationStats
+      parameters:
+        - name: event_id
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Statistics for the event
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RegistrationStats"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "503":
+          $ref: "#/components/responses/DependencyUnavailable"
+
+  /api/v1/registrations/{id}:
+    parameters:
+      - $ref: "#/components/parameters/ResourceId"
+    get:
+      summary: Get a registration by id
+      operationId: getRegistration
+      responses:
+        "200":
+          description: The registration
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Registration"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    put:
+      summary: Not allowed
+      operationId: putRegistrationNotAllowed
+      responses:
+        "405":
+          $ref: "#/components/responses/MethodNotAllowed"
+    patch:
+      summary: Update registration status
+      operationId: updateRegistration
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegistrationPatch"
+      responses:
+        "200":
+          description: Updated registration
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Registration"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+    delete:
+      summary: Delete a registration
+      operationId: deleteRegistration
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+components:
+  parameters:
+    Page:
+      name: page
+      in: query
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+    PageSize:
+      name: page_size
+      in: query
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+    ResourceId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+  responses:
+    MalformedJson:
+      description: Malformed JSON body
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    Conflict:
+      description: Conflict
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    ValidationError:
+      description: Validation or business-rule error
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    MethodNotAllowed:
+      description: Method not allowed
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    DependencyUnavailable:
+      description: A dependency service is unavailable
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+
+  schemas:
+    Health:
+      type: object
+      additionalProperties: false
+      required: [status, service]
+      properties:
+        status:
+          type: string
+          enum: [ok]
+        service:
+          type: string
+
+    RegistrationStatus:
+      type: string
+      enum: [confirmed, cancelled]
+
+    RegistrationCreate:
+      type: object
+      additionalProperties: false
+      required: [user_id, event_id]
+      properties:
+        user_id:
+          type: string
+          format: uuid
+        event_id:
+          type: string
+          format: uuid
+
+    RegistrationPatch:
+      type: object
+      additionalProperties: false
+      required: [status]
+      properties:
+        status:
+          $ref: "#/components/schemas/RegistrationStatus"
+
+    Registration:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - user_id
+        - event_id
+        - amount
+        - status
+        - created_at
+        - updated_at
+      properties:
+        id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        event_id:
+          type: string
+          format: uuid
+        amount:
+          type: number
+        status:
+          $ref: "#/components/schemas/RegistrationStatus"
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    RegistrationPage:
+      type: object
+      additionalProperties: false
+      required: [items, page, page_size, total]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/Registration"
+        page:
+          type: integer
+        page_size:
+          type: integer
+        total:
+          type: integer
+
+    RegistrationStats:
+      type: object
+      additionalProperties: false
+      required: [event_id, capacity, confirmed, available]
+      properties:
+        event_id:
+          type: string
+          format: uuid
+        capacity:
+          type: integer
+        confirmed:
+          type: integer
+        available:
+          type: integer
+
+    Error:
+      type: object
+      additionalProperties: false
+      required: [error]
+      properties:
+        error:
+          type: object
+          additionalProperties: false
+          required: [code, message]
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+            details:
+              type: object
+              additionalProperties: true

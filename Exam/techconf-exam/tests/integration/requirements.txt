@@ -1,0 +1,6 @@
+# Dependencies for the TechConf acceptance suite (tests/integration).
+# Install with:  pip install -r tests/integration/requirements.txt
+pytest>=7.4,<9
+requests>=2.31,<3
+PyYAML>=6.0,<7
+jsonschema>=4.20,<5
