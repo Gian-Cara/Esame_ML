@@ -1,0 +1,34 @@
+# services.yaml — manifest letto dalla suite di collaudo
+# Dichiara solo i servizi che hai implementato.
+# La suite inietta PORT e *_SERVICE_URL come variabili d'ambiente.
+# I servizi non dichiarati vengono skippati (non falliti).
+
+services:
+  # ------------------------------- obbligatori -------------------------------
+  user:
+    cwd: services/user-service
+    command: python -m app
+    health_path: /health
+
+  event:
+    cwd: services/event-service
+    command: python -m app
+    health_path: /health
+
+  registration:
+    cwd: services/registration-service
+    command: python -m app
+    health_path: /health
+
+  # ------------------------------- opzionali --------------------------------
+  # Decommenta solo dopo aver implementato il servizio
+
+  # feedback:
+  #   cwd: services/feedback-service
+  #   command: python -m app
+  #   health_path: /health
+
+  # notification:
+  #   cwd: services/notification-service
+  #   command: python -m app
+  #   health_path: /health
