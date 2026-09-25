@@ -23,6 +23,30 @@ REPO_ROOT = os.path.abspath(
 sys.path.insert(0, REPO_ROOT)
 from contracts.validator import assert_matches_contract
 
+
+# ---------------------------------------------------------------------------
+# Adapter: wrap Flask test-client response so validator.py can call .json()
+# The validator reads response.text to detect a body, then calls response.json().
+# Flask test client uses .data (bytes) instead of .text, so we expose both.
+# ---------------------------------------------------------------------------
+class _FlaskResponseAdapter:
+    """Makes a Flask test-client response compatible with assert_matches_contract."""
+    def __init__(self, rv):
+        self._rv = rv
+        self.status_code = rv.status_code
+        self.headers = rv.headers
+        # validator.py checks `response.text` — expose decoded data
+        self.text = rv.data.decode("utf-8") if rv.data else ""
+
+    def json(self):
+        import json as _json
+        return _json.loads(self._rv.data)
+
+
+def _adapt(rv):
+    return _FlaskResponseAdapter(rv)
+
+
 # Make app importable
 SERVICE_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 sys.path.insert(0, SERVICE_ROOT)
@@ -124,7 +148,7 @@ def test_health(client):
     data = rv.get_json()
     assert data["status"] == "ok"
     assert data["service"] == "user-service"
-    assert_matches_contract("user", "get", "/health", rv)
+    assert_matches_contract("user", "get", "/health", _adapt(rv))
 
 
 # ---------------------------------------------------------------------------
@@ -142,7 +166,7 @@ def test_create_user_returns_201(client):
     assert data["role"] == "attendee"
     assert "created_at" in data
     assert "updated_at" in data
-    assert_matches_contract("user", "post", "/api/v1/users", rv)
+    assert_matches_contract("user", "post", "/api/v1/users", _adapt(rv))
 
 
 @pytest.mark.req("REQ-USR-01")
@@ -223,7 +247,7 @@ def test_get_user_returns_200(client):
     rv = client.get(f"/api/v1/users/{created['id']}")
     assert rv.status_code == 200
     assert rv.get_json()["id"] == created["id"]
-    assert_matches_contract("user", "get", "/api/v1/users/{id}", rv)
+    assert_matches_contract("user", "get", "/api/v1/users/{id}", _adapt(rv))
 
 
 @pytest.mark.req("REQ-USR-04")
@@ -245,7 +269,7 @@ def test_list_users_returns_200(client):
     data = rv.get_json()
     assert "items" in data
     assert "total" in data
-    assert_matches_contract("user", "get", "/api/v1/users", rv)
+    assert_matches_contract("user", "get", "/api/v1/users", _adapt(rv))
 
 
 @pytest.mark.req("REQ-USR-05")
@@ -287,7 +311,7 @@ def test_replace_user_returns_200(client):
     data = rv.get_json()
     assert data["first_name"] == "Luigi"
     assert data["created_at"] == created["created_at"]
-    assert_matches_contract("user", "put", "/api/v1/users/{id}", rv)
+    assert_matches_contract("user", "put", "/api/v1/users/{id}", _adapt(rv))
 
 
 @pytest.mark.req("REQ-USR-06")
@@ -314,7 +338,7 @@ def test_patch_user_returns_200(client):
     )
     assert rv.status_code == 200
     assert rv.get_json()["first_name"] == "Luca"
-    assert_matches_contract("user", "patch", "/api/v1/users/{id}", rv)
+    assert_matches_contract("user", "patch", "/api/v1/users/{id}", _adapt(rv))
 
 
 @pytest.mark.req("REQ-USR-07")
@@ -427,11 +451,11 @@ def test_sqlite_backend_persistence(tmp_path):
 def test_json_backend_create_contract(client_json):
     rv = _create(client_json)
     assert rv.status_code == 201
-    assert_matches_contract("user", "post", "/api/v1/users", rv)
+    assert_matches_contract("user", "post", "/api/v1/users", _adapt(rv))
 
 
 @pytest.mark.req("REQ-USR-10")
 def test_sqlite_backend_create_contract(client_sqlite):
     rv = _create(client_sqlite)
     assert rv.status_code == 201
-    assert_matches_contract("user", "post", "/api/v1/users", rv)
+    assert_matches_contract("user", "post", "/api/v1/users", _adapt(rv))
