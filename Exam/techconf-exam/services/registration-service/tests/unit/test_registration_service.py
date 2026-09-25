@@ -328,6 +328,9 @@ def test_delete_registration_204(client):
     created = _post(client).get_json()
     rv = client.delete(f"/api/v1/registrations/{created['id']}")
     assert rv.status_code == 204
+    assert_matches_contract(
+        "registration", "delete", f"/api/v1/registrations/{created['id']}", _adapt(rv)
+    )
 
 
 @pytest.mark.req("REQ-REG-B10")
@@ -335,6 +338,9 @@ def test_put_not_allowed_405(client):
     rv = client.put("/api/v1/registrations/some-id",
                     data=json.dumps({}), content_type="application/json")
     assert rv.status_code == 405
+    assert_matches_contract(
+        "registration", "put", "/api/v1/registrations/some-id", _adapt(rv)
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -432,3 +438,29 @@ def test_sqlite_backend_contract(client_sqlite):
     rv = _post(client_sqlite)
     assert rv.status_code == 201
     assert_matches_contract("registration", "post", "/api/v1/registrations", _adapt(rv))
+
+
+@pytest.mark.req("REQ-REG-01")
+def test_create_registration_unknown_field_returns_422(client):
+    rv = client.post(
+        "/api/v1/registrations",
+        data=json.dumps({"user_id": "user-1", "event_id": "event-1", "amount": 1}),
+        content_type="application/json",
+    )
+    assert rv.status_code == 422
+    assert rv.get_json()["error"]["code"] == "VALIDATION_ERROR"
+
+
+@pytest.mark.req("REQ-REG-B07")
+@resp_lib.activate
+def test_patch_same_status_is_invalid_transition(client):
+    _mock_user_ok()
+    _mock_event()
+    created = _post(client).get_json()
+    rv = client.patch(
+        f"/api/v1/registrations/{created['id']}",
+        data=json.dumps({"status": "confirmed"}),
+        content_type="application/json",
+    )
+    assert rv.status_code == 422
+    assert rv.get_json()["error"]["code"] == "INVALID_STATUS_TRANSITION"

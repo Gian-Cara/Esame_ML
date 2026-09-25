@@ -43,6 +43,8 @@ def create_registration():
     body = request.get_json(silent=True)
     if body is None:
         return _error("MALFORMED_JSON", "Request body is not valid JSON.", status=400)
+    if not isinstance(body, dict):
+        return _error("VALIDATION_ERROR", "Request body must be a JSON object.", status=422)
     try:
         reg = _svc.create_registration(body)
     except ValidationError as e:
@@ -107,6 +109,8 @@ def patch_registration(reg_id: str):
     body = request.get_json(silent=True)
     if body is None:
         return _error("MALFORMED_JSON", "Request body is not valid JSON.", status=400)
+    if not isinstance(body, dict):
+        return _error("VALIDATION_ERROR", "Request body must be a JSON object.", status=422)
     try:
         reg = _svc.update_status(reg_id, body)
     except NotFoundError:
