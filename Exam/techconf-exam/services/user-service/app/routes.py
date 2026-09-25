@@ -58,6 +58,8 @@ def create_user():
     body = request.get_json(silent=True)
     if body is None:
         return _error("MALFORMED_JSON", "Request body is not valid JSON.", status=400)
+    if not isinstance(body, dict):
+        return _error("VALIDATION_ERROR", "Request body must be a JSON object.", status=422)
     try:
         user = _svc.create_user(body)
     except ValidationError as e:
@@ -115,6 +117,8 @@ def replace_user(user_id: str):
     body = request.get_json(silent=True)
     if body is None:
         return _error("MALFORMED_JSON", "Request body is not valid JSON.", status=400)
+    if not isinstance(body, dict):
+        return _error("VALIDATION_ERROR", "Request body must be a JSON object.", status=422)
     try:
         user = _svc.replace_user(user_id, body)
     except NotFoundError:
@@ -135,6 +139,8 @@ def update_user(user_id: str):
     body = request.get_json(silent=True)
     if body is None:
         return _error("MALFORMED_JSON", "Request body is not valid JSON.", status=400)
+    if not isinstance(body, dict):
+        return _error("VALIDATION_ERROR", "Request body must be a JSON object.", status=422)
     try:
         user = _svc.update_user(user_id, body)
     except NotFoundError:

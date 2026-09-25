@@ -181,9 +181,8 @@ def test_create_user_default_role(client):
 def test_create_user_id_not_accepted_from_client(client):
     payload = {**VALID_USER, "id": "custom-id"}
     rv = _create(client, payload)
-    # Should still succeed but with a server-generated UUID (not "custom-id")
-    assert rv.status_code == 201
-    assert rv.get_json()["id"] != "custom-id"
+    assert rv.status_code == 422
+    assert rv.get_json()["error"]["code"] == "VALIDATION_ERROR"
 
 
 @pytest.mark.req("REQ-USR-03")
@@ -373,6 +372,7 @@ def test_delete_user_returns_204(client):
     created = _create(client).get_json()
     rv = client.delete(f"/api/v1/users/{created['id']}")
     assert rv.status_code == 204
+    assert_matches_contract("user", "delete", f"/api/v1/users/{created['id']}", _adapt(rv))
     # Confirm gone
     rv2 = client.get(f"/api/v1/users/{created['id']}")
     assert rv2.status_code == 404

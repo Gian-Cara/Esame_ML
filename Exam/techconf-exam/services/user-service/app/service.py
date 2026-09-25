@@ -40,6 +40,7 @@ class NotFoundError(Exception):
 # ---------------------------------------------------------------------------
 
 VALID_ROLES = {"attendee", "speaker", "organizer"}
+USER_INPUT_FIELDS = {"first_name", "last_name", "email", "company", "role"}
 EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 
 
@@ -52,35 +53,36 @@ def _now_utc() -> str:
 
 
 def _validate_user_fields(data: dict, partial: bool = False) -> None:
-    """
-    Validate user input fields.
-    When *partial* is True (PATCH), only present fields are checked.
-    Raises ValidationError on failure.   REQ-USR-03
-    """
+    """Validate input types, allowed properties, and field constraints."""
     errors: dict[str, str] = {}
 
-    if not partial or "first_name" in data:
-        v = data.get("first_name", "")
-        if not (1 <= len(str(v)) <= 50):
-            errors["first_name"] = "Must be 1–50 characters."
+    unknown = sorted(set(data) - USER_INPUT_FIELDS)
+    if unknown:
+        errors["fields"] = f"Unknown fields: {', '.join(unknown)}."
 
-    if not partial or "last_name" in data:
-        v = data.get("last_name", "")
-        if not (1 <= len(str(v)) <= 50):
-            errors["last_name"] = "Must be 1–50 characters."
+    for field in ("first_name", "last_name"):
+        if not partial or field in data:
+            value = data.get(field)
+            if not isinstance(value, str):
+                errors[field] = "Must be a string."
+            elif not (1 <= len(value) <= 50):
+                errors[field] = "Must be 1–50 characters."
 
     if not partial or "email" in data:
-        v = data.get("email", "")
-        if not EMAIL_RE.match(str(v)):
+        value = data.get("email")
+        if not isinstance(value, str) or not EMAIL_RE.fullmatch(value):
             errors["email"] = "Must be a valid email address."
 
     if "company" in data and data["company"] is not None:
-        v = data.get("company", "")
-        if len(str(v)) > 100:
+        value = data["company"]
+        if not isinstance(value, str):
+            errors["company"] = "Must be a string or null."
+        elif len(value) > 100:
             errors["company"] = "Must be at most 100 characters."
 
-    if "role" in data and data["role"] is not None:
-        if data["role"] not in VALID_ROLES:
+    if "role" in data:
+        value = data["role"]
+        if not isinstance(value, str) or value not in VALID_ROLES:
             errors["role"] = f"Must be one of: {', '.join(sorted(VALID_ROLES))}."
 
     if errors:
