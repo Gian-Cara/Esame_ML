@@ -34,4 +34,4 @@ tests\integration\test_user.py::test_it_u06_put_and_patch_update_timestamp PASSE
 tests\integration\test_user.py::test_it_u07_delete_then_404 PASSED       [ 96%]
 tests\integration\test_user.py::test_it_u08_malformed_json_and_health PASSED [100%]
 
-===================== 27 passed, 10 deselected in 21.89s ======================
+===================== 27 passed, 10 deselected in 21.88s ======================
