@@ -43,6 +43,8 @@ def create_event():
     body = request.get_json(silent=True)
     if body is None:
         return _error("MALFORMED_JSON", "Request body is not valid JSON.", status=400)
+    if not isinstance(body, dict):
+        return _error("VALIDATION_ERROR", "Request body must be a JSON object.", status=422)
     try:
         event = _svc.create_event(body)
     except ValidationError as e:
@@ -88,6 +90,8 @@ def replace_event(event_id: str):
     body = request.get_json(silent=True)
     if body is None:
         return _error("MALFORMED_JSON", "Request body is not valid JSON.", status=400)
+    if not isinstance(body, dict):
+        return _error("VALIDATION_ERROR", "Request body must be a JSON object.", status=422)
     try:
         event = _svc.replace_event(event_id, body)
     except NotFoundError:
@@ -108,6 +112,8 @@ def update_event(event_id: str):
     body = request.get_json(silent=True)
     if body is None:
         return _error("MALFORMED_JSON", "Request body is not valid JSON.", status=400)
+    if not isinstance(body, dict):
+        return _error("VALIDATION_ERROR", "Request body must be a JSON object.", status=422)
     try:
         event = _svc.update_event(event_id, body)
     except NotFoundError:

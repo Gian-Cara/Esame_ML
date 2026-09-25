@@ -327,6 +327,7 @@ def test_delete_event_returns_204(client):
     created = _post_event(client).get_json()
     rv = client.delete(f"/api/v1/events/{created['id']}")
     assert rv.status_code == 204
+    assert_matches_contract("event", "delete", f"/api/v1/events/{created['id']}", _adapt(rv))
     rv2 = client.get(f"/api/v1/events/{created['id']}")
     assert rv2.status_code == 404
 
@@ -402,3 +403,30 @@ def test_sqlite_backend_contract(client_sqlite):
     rv = _post_event(client_sqlite)
     assert rv.status_code == 201
     assert_matches_contract("event", "post", "/api/v1/events", _adapt(rv))
+
+
+@pytest.mark.req("REQ-EVT-B03")
+def test_create_event_impossible_date_returns_422(client):
+    rv = _post_event(client, {**VALID_EVENT, "start_date": "2026-99-99"})
+    assert rv.status_code == 422
+    assert rv.get_json()["error"]["code"] == "VALIDATION_ERROR"
+
+
+@pytest.mark.req("REQ-EVT-B03")
+@resp_lib.activate
+def test_patch_single_date_cannot_invalidate_range(client):
+    _mock_organizer_ok()
+    created = _post_event(client).get_json()
+    rv = client.patch(
+        f"/api/v1/events/{created['id']}",
+        data=json.dumps({"start_date": "2026-10-03"}),
+        content_type="application/json",
+    )
+    assert rv.status_code == 422
+    assert rv.get_json()["error"]["code"] == "VALIDATION_ERROR"
+
+
+@pytest.mark.req("REQ-EVT-03")
+def test_create_event_unknown_field_returns_422(client):
+    rv = _post_event(client, {**VALID_EVENT, "unexpected": True})
+    assert rv.status_code == 422
