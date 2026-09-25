@@ -66,3 +66,8 @@ GET /health → 200 {"status": "ok", "service": "<nome-servizio>"}
 - Con `json`/`sqlite` i file vanno in `DATA_DIR` (default `./data`)
 - Solo librerie standard: `json`, `sqlite3`
 - La logica di business non deve dipendere dal backend scelto
+
+## Dipendenze Python
+
+- Runtime: `flask`, `requests`
+- Test: `pytest`, `pytest-cov`, `responses`

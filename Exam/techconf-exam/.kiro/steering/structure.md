@@ -64,18 +64,18 @@ services/<nome>-service/
 
 ## Test
 
-- **Unit test:** `pytest services/<nome>-service/tests/unit --cov=app`
-- **Integration test (tuoi):** `pytest services/<nome>-service/tests/integration`
-- **Suite collaudo docente:** `pytest tests/integration -m mandatory -v`
-- **Tutti i test:** `pytest services/ --cov`
+- **Unit test:** `python -m pytest services/<nome>-service/tests/unit --cov=services/<nome>-service/app`
+- **Integration test (tuoi):** `python -m pytest services/<nome>-service/tests/integration`
+- **Suite collaudo docente:** `python -m pytest tests/integration -m mandatory -v`
+- **Tutti i test:** eseguire separatamente le suite dei tre servizi per evitare collisioni tra i package Python omonimi `app`.
 
 Ogni test porta l'ID del requisito nel nome o nel marker `@pytest.mark.req("REQ-XXX-BYY")`.
 
 ## Tracciabilità requisito → codice → test
 
-- La regola `REQ-REG-B05` vive in `services/registration-service/app/service.py` (funzione `check_capacity`)
-- Il test è in `services/registration-service/tests/unit/test_service.py::test_event_full_returns_409`
-- Partendo dal requisito, il percorso è immediato: `service.py` per il codice, `tests/unit/` per il test
+- La regola `REQ-REG-B05` vive in `services/registration-service/app/service.py`, nel controllo di capienza di `RegistrationService.create_registration`.
+- Il test è `services/registration-service/tests/unit/test_registration_service.py::test_create_event_full_409`.
+- Partendo dal requisito, il percorso è immediato: `service.py` per il codice, `tests/unit/` per il test.
 
 ## Git e dati
 
