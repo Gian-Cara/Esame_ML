@@ -20,7 +20,7 @@ class UserServiceClient:
             resp = requests.get(
                 f"{self._base}/api/v1/users/{user_id}", timeout=2
             )
-        except requests.exceptions.RequestException as exc:
+        except (requests.exceptions.RequestException, ConnectionError) as exc:
             raise DependencyError(str(exc)) from exc
 
         if resp.status_code == 200:
