@@ -5,6 +5,10 @@ requisito coinvolto, causa radice, test di regressione e commit di fix.
 
 Minimo richiesto (§6.4): 2 bug chiusi, di cui almeno 1 di implementazione.
 
+> **Verifica finale:** i riferimenti `#1` e `#2` sotto sono placeholder storici locali:
+> il repository GitHub non contiene ancora issue. Per soddisfare formalmente §6.4 occorre
+> creare e chiudere due issue reali, quindi sostituire questi placeholder con i relativi link.
+
 | ID | Issue | Trovato da | Tipo | Requisito | Causa radice | Test di regressione | Commit |
 |---|---|---|---|---|---|---|---|
 | BUG-01 | #1 | unit test event-service | impl | REQ-EVT-B05 | Il client HTTP catturava solo `requests.exceptions.RequestException`, ma la libreria `responses` propaga un `ConnectionError` nativo Python quando si simula un servizio spento: l'eccezione sfuggiva e il servizio restituiva 500 invece di 503 `DEPENDENCY_UNAVAILABLE` | `test_create_event_user_service_down_returns_503` | `cd74697` |

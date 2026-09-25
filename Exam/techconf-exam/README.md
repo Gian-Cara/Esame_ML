@@ -52,6 +52,7 @@ services/<nome>-service/
 
 ## Prerequisiti
 
+- Aprire `Exam/techconf-exam` come **root del workspace Kiro**: steering e hook sono intenzionalmente nella sua `.kiro/` e non nelle directory superiori.
 - Python 3.12+
 - Dipendenze runtime e test:
 
@@ -107,9 +108,9 @@ python -m pytest services/event-service/tests/unit --cov=services/event-service/
 python -m pytest services/registration-service/tests/unit --cov=services/registration-service/app
 ```
 
-Coverage attuale: user **85%**, event **80%**, registration **84%** (soglia richiesta ≥ 80%).
+Coverage verificata con `--cov-fail-under=80`: user **83.25%**, event **80.14%**, registration **83.50%**.
 
-### Integration test propri (avviano servizi reali in subprocess)
+### Integration test propri (dipendenze reali in subprocess; SUT tramite Flask test client)
 
 ```bash
 python -m pytest services/event-service/tests/integration
